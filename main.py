@@ -1,4 +1,6 @@
 import os
+import asyncio
+from aiohttp import web
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
@@ -10,6 +12,9 @@ app = Client("palki_stream_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT
 
 PORT = int(os.environ.get("PORT", 8080))
 SERVER_URL = os.environ.get("SERVER_URL", "https://palki-stream-bot.onrender.com")
+
+async def handle_root(request):
+    return web.Response(text="Palki Stream Bot is running successfully!")
 
 @app.on_message(filters.command("start"))
 async def start_command(client, message: Message):
@@ -29,6 +34,18 @@ async def generate_link(client, message: Message):
         direct_link = f"{SERVER_URL}/file/{file_id}"
         await message.reply_text(f"তোমার মুভির ডিরেক্ট লিংক:\n{direct_link}")
 
+async def main():
+    server = web.Application()
+    server.router.add_get("/", handle_root)
+    runner = web.AppRunner(server)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+    
+    await app.start()
+    print("Bot started successfully!")
+    await asyncio.Event().wait()
+
 if __name__ == "__main__":
-    app.run()
-  
+    asyncio.run(main())
+    
